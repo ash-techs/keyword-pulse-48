@@ -1,1 +1,10 @@
 project_id = "xzzkoeyidbaixnghleys"
+
+[functions.search-twitter]
+verify_jwt = false
+
+[functions.search-facebook]
+verify_jwt = false
+
+[functions.search-google-news]
+verify_jwt = false
