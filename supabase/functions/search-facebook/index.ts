@@ -30,39 +30,25 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Searching Facebook for keyword: ${keyword}`);
-
-    // Facebook Graph API - Search for public posts
-    // Note: Facebook Graph API has limited search capabilities for public posts
-    // This searches for pages that match the keyword
-    const facebookUrl = `https://graph.facebook.com/v18.0/search?q=${encodeURIComponent(keyword)}&type=page&fields=id,name,about,link&limit=10&access_token=${accessToken}`;
+    // Facebook Graph API has very limited search capabilities
+    // Public post search requires:
+    // 1. Approved app with advanced permissions
+    // 2. Page access tokens (not user tokens)
+    // 3. Can only search within pages you manage
+    // 
+    // For news/general searches, Facebook doesn't provide a public search API
+    // This function returns a note about the limitation
     
-    const facebookResponse = await fetch(facebookUrl);
+    console.log(`Note: Facebook Graph API doesn't support general public post search for keyword: ${keyword}`);
 
-    if (!facebookResponse.ok) {
-      const errorText = await facebookResponse.text();
-      console.error('Facebook API error:', facebookResponse.status, errorText);
-      return new Response(
-        JSON.stringify({ 
-          error: 'Facebook API error', 
-          details: errorText,
-          status: facebookResponse.status 
-        }),
-        { status: facebookResponse.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await facebookResponse.json();
-    console.log('Facebook API response:', JSON.stringify(data, null, 2));
-
-    // Transform the response to a simpler format
-    const results = data.data?.map((page: any) => ({
-      title: page.name,
-      snippet: page.about || 'No description available',
-      link: page.link || `https://facebook.com/${page.id}`,
+    // Return an informative empty result with explanation
+    const results = [{
+      title: "Facebook Search Limited",
+      snippet: `Facebook's API doesn't support general public post searches. To search Facebook, you would need page-specific access or use their official website. Searched for: "${keyword}"`,
+      link: `https://www.facebook.com/search/posts/?q=${encodeURIComponent(keyword)}`,
       source: 'Facebook',
       date: new Date().toISOString(),
-    })) || [];
+    }];
 
     return new Response(
       JSON.stringify({ results }),
