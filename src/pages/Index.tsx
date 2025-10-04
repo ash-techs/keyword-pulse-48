@@ -42,30 +42,23 @@ const Index = () => {
   const [facebookResults, setFacebookResults] = useState<SearchResult[]>([]);
   const [googleResults, setGoogleResults] = useState<SearchResult[]>([]);
 
-  const handleExtractKeywords = () => {
+  const handleExtractAndSearch = async () => {
     const extractedKeywords = extractKeywords(inputText);
     setKeywords(extractedKeywords);
     setError(null);
     
     if (extractedKeywords.length === 0) {
       setError("No keywords found. Please enter more meaningful text.");
-    }
-  };
-
-  const handleSearch = async () => {
-    if (keywords.length === 0) {
-      setError("Please extract keywords first.");
       return;
     }
 
     setLoading(true);
-    setError(null);
     setTwitterResults([]);
     setFacebookResults([]);
     setGoogleResults([]);
 
     try {
-      const searchQuery = keywords.join(" ");
+      const searchQuery = extractedKeywords.join(" ");
 
       const [twitterRes, facebookRes, googleRes] = await Promise.all([
         supabase.functions.invoke("search-twitter", {
@@ -165,31 +158,23 @@ const Index = () => {
               className="min-h-[150px] mb-4 bg-white/50 dark:bg-black/20 border-white/30 resize-none"
             />
             
-            <div className="flex gap-4">
-              <Button
-                onClick={handleExtractKeywords}
-                disabled={!inputText.trim()}
-                className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-              >
-                <Search className="w-4 h-4 mr-2" />
-                Extract Keywords
-              </Button>
-              
-              <Button
-                onClick={handleSearch}
-                disabled={keywords.length === 0 || loading}
-                className="flex-1 bg-gradient-secondary hover:opacity-90 transition-opacity"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Searching...
-                  </>
-                ) : (
-                  "Search All Platforms"
-                )}
-              </Button>
-            </div>
+            <Button
+              onClick={handleExtractAndSearch}
+              disabled={!inputText.trim() || loading}
+              className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Extracting & Searching...
+                </>
+              ) : (
+                <>
+                  <Search className="w-4 h-4 mr-2" />
+                  Extract Keywords & Search
+                </>
+              )}
+            </Button>
           </div>
         </motion.div>
 
