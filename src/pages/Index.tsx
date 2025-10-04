@@ -7,7 +7,9 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { supabase } from "@/integrations/supabase/client";
+
+// TODO: Replace with your actual Node.js backend URL
+const API_BASE_URL = "https://your-nodejs-backend.com/api";
 
 interface SearchResult {
   title: string;
@@ -60,34 +62,47 @@ const Index = () => {
     try {
       const searchQuery = extractedKeywords.join(" ");
 
+      // Call your external Node.js API endpoints
       const [twitterRes, facebookRes, googleRes] = await Promise.all([
-        supabase.functions.invoke("search-twitter", {
-          body: { keyword: searchQuery },
-          method: "GET",
-        }).then(res => {
-          const url = `${res.data ? '' : 'search-twitter'}?keyword=${encodeURIComponent(searchQuery)}`;
-          return fetch(`https://xzzkoeyidbaixnghleys.supabase.co/functions/v1/${url}`);
+        fetch(`${API_BASE_URL}/search/twitter?keyword=${encodeURIComponent(searchQuery)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // Add your API key if needed
+            // 'Authorization': 'Bearer YOUR_API_KEY',
+          },
         }),
-        supabase.functions.invoke("search-facebook", {
-          body: { keyword: searchQuery },
-          method: "GET",
-        }).then(res => {
-          const url = `${res.data ? '' : 'search-facebook'}?keyword=${encodeURIComponent(searchQuery)}`;
-          return fetch(`https://xzzkoeyidbaixnghleys.supabase.co/functions/v1/${url}`);
+        fetch(`${API_BASE_URL}/search/facebook?keyword=${encodeURIComponent(searchQuery)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': 'Bearer YOUR_API_KEY',
+          },
         }),
-        supabase.functions.invoke("search-google-news", {
-          body: { keyword: searchQuery },
-          method: "GET",
-        }).then(res => {
-          const url = `${res.data ? '' : 'search-google-news'}?keyword=${encodeURIComponent(searchQuery)}`;
-          return fetch(`https://xzzkoeyidbaixnghleys.supabase.co/functions/v1/${url}`);
+        fetch(`${API_BASE_URL}/search/google-news?keyword=${encodeURIComponent(searchQuery)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            // 'Authorization': 'Bearer YOUR_API_KEY',
+          },
         }),
       ]);
 
+      // Check for errors
+      if (!twitterRes.ok) {
+        console.error('Twitter API error:', await twitterRes.text());
+      }
+      if (!facebookRes.ok) {
+        console.error('Facebook API error:', await facebookRes.text());
+      }
+      if (!googleRes.ok) {
+        console.error('Google API error:', await googleRes.text());
+      }
+
       const [twitterData, facebookData, googleData] = await Promise.all([
-        twitterRes.json(),
-        facebookRes.json(),
-        googleRes.json(),
+        twitterRes.ok ? twitterRes.json() : { results: [] },
+        facebookRes.ok ? facebookRes.json() : { results: [] },
+        googleRes.ok ? googleRes.json() : { results: [] },
       ]);
 
       setTwitterResults(twitterData.results || []);
